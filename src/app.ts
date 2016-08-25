@@ -6,18 +6,24 @@ declare var firebase: any;
   props: {
   },
   filters: {
-    "reverse": function(value: any[]){
-      return value.reverse()
+    "date": function(value: number){
+      var d = new Date(value);
+      return `${d.getFullYear()}-${(d.getMonth()+1)}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}`
     }
   },
   template: `
     <div>
       <p v-if="user"><img :src="user.photoURL">{{user.displayName}}<button @click="logout">logout</button></p>
       <button v-if="!user" @click="login">login</button>
-      <textarea v-if="user" id="code" style="height:300px; width: 500px" v-model="message"></textarea>
-      <button v-if="user" @click="send(message)">送信</button>
-      <div v-for="item in items | orderBy 'key' -1" track-by="key">
-        <img :src="item.val().author.profile_picture">{{item.key}} {{item.val().text}} {{item.val().timestamp}} {{item.val().author.screen_name}} <button @click="remove(item)">x</button>
+      <textarea v-if="user" class="message" v-model="message"></textarea>
+      <div class="nav">
+        <button v-if="user" class="send" @click="send(message)">送信</button>
+      </div>
+      <div class="item" v-for="item in items | orderBy 'key' -1" track-by="key">
+        <img :src="item.val().author.profile_picture" :title="item.val().author.full_name">
+        <div class="itemtext">{{item.val().text}}</div>
+        <span class="date">{{item.val().timestamp | date}}</span>
+        <button @click="remove(item)">x</button>
       </div>
     </div>
   `
@@ -52,7 +58,7 @@ export class App extends Vue {
     });
   }
   login(){
-    var provider = new firebase.auth.GoogleAuthProvider();
+    var provider = new firebase.auth.TwitterAuthProvider();
     this.auth.signInWithPopup(provider);
   }
   logout(){
@@ -70,13 +76,16 @@ export class App extends Vue {
       author: {
         uid: this.auth.currentUser.uid,
         full_name: this.auth.currentUser.displayName,
-        screen_name: this.auth.currentUser.username ? this.auth.currentUser.username : "", //Only twitter
         profile_picture: this.auth.currentUser.photoURL
       },
       text: message,
       timestamp: firebase.database.ServerValue.TIMESTAMP
     };
-    return this.ref.push(item)
+    this.ref.push(item).then(()=>{
+      this.message = "";
+      var t:HTMLTextAreaElement = <HTMLTextAreaElement>document.querySelector(".message");
+      t.focus();
+    })
   }
 }
 interface UploadCallback { (filePath: string): void }
@@ -85,7 +94,6 @@ export class FirebaseItemBody{
   author: {
     uid: string,
     full_name: string,
-    screen_name: string,
     profile_picture: string
   }
   timestamp: number
