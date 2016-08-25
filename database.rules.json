@@ -3,7 +3,7 @@
     "posts": {
       ".read": true,
       "$postId": {
-        ".write": "(auth.uid === newData.child('author').child('uid').val()) || (!newData.exists() && auth.uid === data.child('author').child('uid').val())"
+        ".write": "auth != null && (auth.uid === newData.child('author').child('uid').val()) || (!newData.exists() && auth.uid === data.child('author').child('uid').val())"
       }
     }
   }

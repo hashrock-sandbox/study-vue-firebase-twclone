@@ -5,17 +5,15 @@ export class Junk {
   private database: any
   private ref: any
 
-  constructor(onAuthStateChanged: OnAuthStateChangedCallback) {
+  constructor(onAuthStateChanged: OnAuthStateChangedCallback, onFetch: FetchCallback, num: number) {
     this.auth = firebase.auth();
     this.database = firebase.database();
     this.ref = this.database.ref('posts');
     this.auth.onAuthStateChanged(onAuthStateChanged);
+    this.ref.off();
+    this.ref.limitToLast(num).on('child_added', onFetch);
   };
 
-  fetch(num: number, cb: FetchCallback) {
-    this.ref.off();
-    this.ref.limitToLast(num).on('child_added', cb);
-  }
 
   login() {
     var provider = new firebase.auth.GoogleAuthProvider();
