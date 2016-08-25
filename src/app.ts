@@ -33,7 +33,6 @@ export class App extends Vue {
   message: string;
   items: Array<FirebaseItem>;
   private auth: any
-  private database: any
   private ref: any
 
   data(): any{
@@ -46,20 +45,17 @@ export class App extends Vue {
 
   ready(){
     this.auth = firebase.auth();
-    this.database = firebase.database();
-    this.ref = this.database.ref('posts');
+    this.ref = firebase.database().ref('posts');
     this.auth.onAuthStateChanged((user: FirebaseUser)=>{
       this.user = user;
     });
     this.ref.off();
     this.ref.limitToLast(30).on('child_added', (item: FirebaseItem)=>{
-      console.log("fetched");
       this.items.push(item)
     });
   }
   login(){
-    var provider = new firebase.auth.TwitterAuthProvider();
-    this.auth.signInWithPopup(provider);
+    this.auth.signInWithPopup(new firebase.auth.TwitterAuthProvider());
   }
   logout(){
     this.auth.signOut();
