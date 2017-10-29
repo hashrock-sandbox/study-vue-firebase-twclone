@@ -13,19 +13,24 @@ import * as firebase from "firebase"
   },
   template: `
     <div>
-      <p v-if="user">{{user.displayName}}<button @click="logout">logout</button></p>
-      <button v-if="!user" @click="login">login</button>
-      <textarea v-if="user" class="message" v-model="message"></textarea>
+      <div class="header">
+        <div class="header__title">作業ったー</div>
+        <div class="header__login" v-if="user">
+          {{user.displayName}}<button @click="logout">logout</button>
+        </div>
+        <button v-if="!user" @click="login">login</button>
+      </div>
       <div class="nav">
+        <textarea v-if="user" class="message" v-model="message"></textarea>
         <button v-if="user" class="send" @click="send(message)">送信</button>
       </div>
       <div class="item" v-for="item in items | orderBy 'key' -1" track-by="key">
-        <div class="item__username">
-          {{item.val().author.full_name}}
+        <div class="item__info">
+          <div class="item__username">{{item.val().author.full_name}}</div>
+          <div class="item__date">{{item.val().timestamp | date}}</div>
+          <div class="item__remove" @click="remove(item)">×</div>
         </div>
         <div class="itemtext">{{item.val().text}}</div>
-        <span class="date">{{item.val().timestamp | date}}</span>
-        <button @click="remove(item)">x</button>
       </div>
     </div>
   `
