@@ -1,6 +1,6 @@
 import Component from 'vue-class-component'
 import * as Vue from "vue";
-declare var firebase: any;
+import * as firebase from "firebase"
 
 @Component({
   props: {
@@ -44,6 +44,15 @@ export class App extends Vue {
   }
 
   ready(){
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyAKr_3kCBAdOSTvyMywnoHn2kAjhTgQlXE",
+      authDomain: "twclone001.firebaseapp.com",
+      databaseURL: "https://twclone001.firebaseio.com",
+      storageBucket: "twclone001.appspot.com",
+    };
+    firebase.initializeApp(config);
+
     this.auth = firebase.auth();
     this.ref = firebase.database().ref('posts');
     this.auth.onAuthStateChanged((user: FirebaseUser)=>{
@@ -92,7 +101,7 @@ export class FirebaseItemBody{
     full_name: string,
     profile_picture: string
   }
-  timestamp: number
+  timestamp: Object
   text: string
 }
 interface FirebaseItemValue { (): FirebaseItemBody }

@@ -9,8 +9,7 @@
         "experimentalDecorators": true
     },
     "files": [
-        "./src/main.ts",
-        "./src/test.ts"
+        "./src/main.ts"
     ],
     "exclude": [
         "public",
