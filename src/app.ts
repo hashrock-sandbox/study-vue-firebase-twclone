@@ -13,14 +13,16 @@ import * as firebase from "firebase"
   },
   template: `
     <div>
-      <p v-if="user"><img :src="user.photoURL">{{user.displayName}}<button @click="logout">logout</button></p>
+      <p v-if="user">{{user.displayName}}<button @click="logout">logout</button></p>
       <button v-if="!user" @click="login">login</button>
       <textarea v-if="user" class="message" v-model="message"></textarea>
       <div class="nav">
         <button v-if="user" class="send" @click="send(message)">送信</button>
       </div>
       <div class="item" v-for="item in items | orderBy 'key' -1" track-by="key">
-        <img :src="item.val().author.profile_picture" :title="item.val().author.full_name">
+        <div class="item__username">
+          {{item.val().author.full_name}}
+        </div>
         <div class="itemtext">{{item.val().text}}</div>
         <span class="date">{{item.val().timestamp | date}}</span>
         <button @click="remove(item)">x</button>
@@ -80,8 +82,7 @@ export class App extends Vue {
     var item:FirebaseItemBody = {
       author: {
         uid: this.auth.currentUser.uid,
-        full_name: this.auth.currentUser.displayName,
-        profile_picture: this.auth.currentUser.photoURL
+        full_name: this.auth.currentUser.displayName
       },
       text: message,
       timestamp: firebase.database.ServerValue.TIMESTAMP
@@ -93,13 +94,10 @@ export class App extends Vue {
     })
   }
 }
-interface UploadCallback { (filePath: string): void }
-interface FetchCallback { (item: FirebaseItem): void }
 export class FirebaseItemBody{
   author: {
     uid: string,
-    full_name: string,
-    profile_picture: string
+    full_name: string
   }
   timestamp: Object
   text: string
