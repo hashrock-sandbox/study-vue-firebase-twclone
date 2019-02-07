@@ -14,23 +14,23 @@
     </div>
     <div class="item" :key="index" v-for="(item, index) in reversed" track-by="key">
       <div class="item__info">
-        <div class="item__username">{{item.val().author.full_name}}</div>
-        <div class="item__date">{{item.val().timestamp | date}}</div>
+        <div class="item__username">{{item.author.full_name}}</div>
+        <div class="item__date">{{item.timestamp | date}}</div>
         <div class="item__remove" @click="remove(item)">×</div>
       </div>
-      <div class="itemtext">{{item.val().text}}</div>
+      <div class="itemtext">{{item.text}}</div>
     </div>
   </div>
 </template>
 <script lang="ts">
 import Vue from "vue";
-import firebase from 'firebase'
+import firebase from "firebase";
 export class FirebaseItemBody {
   author: {
     uid: string;
     full_name: string;
   };
-  timestamp: Object;
+  timestamp: firebase.firestore.Timestamp;
   text: string;
 }
 interface FirebaseItemValue {
@@ -51,8 +51,12 @@ export class FirebaseUser {
 
 export default Vue.extend({
   filters: {
-    date: function(value: number) {
-      var d = new Date(value);
+    date: function(value: firebase.firestore.Timestamp) {
+      console.log(value);
+      if (!value) {
+        return "";
+      }
+      var d = value.toDate();
       return `${d.getFullYear()}-${d.getMonth() +
         1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}`;
     }
@@ -64,10 +68,9 @@ export default Vue.extend({
       items: []
     };
   },
-  computed:{
+  computed: {
     reversed() {
-        return this.items
-            .reverse()
+      return this.items.reverse();
     }
   },
   methods: {
@@ -79,7 +82,7 @@ export default Vue.extend({
     },
     remove(post: FirebaseItem) {
       this.items.$remove(post);
-      this.ref.child(post.key).remove();
+      this.collection.doc(post.key).delete();
     },
 
     send(message: string) {
@@ -90,9 +93,9 @@ export default Vue.extend({
           full_name: this.auth.currentUser.displayName
         },
         text: message,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
       };
-      this.ref.push(item).then(() => {
+      this.collection.add(item).then(() => {
         this.message = "";
         var t: HTMLTextAreaElement = <HTMLTextAreaElement>(
           document.querySelector(".message")
@@ -107,18 +110,29 @@ export default Vue.extend({
       apiKey: "AIzaSyAKr_3kCBAdOSTvyMywnoHn2kAjhTgQlXE",
       authDomain: "twclone001.firebaseapp.com",
       databaseURL: "https://twclone001.firebaseio.com",
-      storageBucket: "twclone001.appspot.com"
+      projectId: "twclone001",
+      storageBucket: "twclone001.appspot.com",
+      messagingSenderId: "863911734656"
     };
     firebase.initializeApp(config);
 
     this.auth = firebase.auth();
-    this.ref = firebase.database().ref("posts");
+    this.db = firebase.firestore();
+    this.collection = this.db.collection("posts");
     this.auth.onAuthStateChanged((user: FirebaseUser) => {
       this.user = user;
     });
-    this.ref.off();
-    this.ref.limitToLast(30).on("child_added", (item: FirebaseItem) => {
-      this.items.push(item);
+    this.collection.onSnapshot(snapshot => {
+      // console.log(snapshot.docChanges)
+      snapshot.docChanges().forEach(change => {
+        if (change.type === "added") {
+          this.items.push(change.doc.data());
+        } else if (change.type === "modified") {
+          // commit('set', payload)
+        } else if (change.type === "removed") {
+          // commit('remove', payload)
+        }
+      });
     });
   }
 });
