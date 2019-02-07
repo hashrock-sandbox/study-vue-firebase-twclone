@@ -9,7 +9,7 @@
       <button v-if="!user" @click="login">login</button>
     </div>
     <div class="nav">
-      <textarea v-if="user" class="message" v-model="message"></textarea>
+      <textarea v-if="user" class="message" v-model="message" @keyup.ctrl.enter="send(message)"></textarea>
       <button v-if="user" class="send" @click="send(message)">送信</button>
     </div>
     <div class="item" :key="item.id" v-for="(item) in reversed" track-by="key">
