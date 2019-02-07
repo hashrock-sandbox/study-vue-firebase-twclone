@@ -73,7 +73,6 @@ export default Vue.extend({
     reversed() {
       let sorted = this.items.slice();
       sorted.sort((a, b) => {
-        console.log(a.timestamp.toDate() - b.timestamp.toDate());
         return -1 * (a.timestamp.toDate() - b.timestamp.toDate());
       });
       return sorted;
