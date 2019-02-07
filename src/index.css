@@ -1,49 +1,49 @@
-img{
+img {
   width: 32px;
   display: inline-block;
 }
-.itemtext{
+.itemtext {
   font-size: 1.1rem;
   display: inline-block;
   padding: 0 1rem;
 }
-.message{
+.message {
   box-sizing: border-box;
   width: 100%;
   height: 4em;
 }
 
-main{
+main {
   width: 960px;
   margin: 0 auto;
   background: white;
 }
 
-body{
-  background: #EEEEEE;
+body {
+  background: #eeeeee;
 }
 
-.nav{
+.nav {
   display: flex;
   justify-content: flex-end;
 }
 
-.send{
+.send {
   padding: 0.5em 0.75em;
   width: 5rem;
 }
 
-.item{
+.item {
   padding: 0.5em 0;
   border-bottom: 1px solid #cccccc;
 }
 
-.item__username{
+.item__username {
   flex: 1;
   padding: 0 1rem;
 }
 
-.item__remove{
+.item__remove {
   background: #888;
   color: white;
   width: 1rem;
@@ -54,13 +54,13 @@ body{
   text-align: center;
   border-radius: 2rem;
 }
-.item__info{
+.item__info {
   font-size: 0.8rem;
   display: flex;
   align-items: center;
 }
 
-.header{
+.header {
   display: flex;
   background: #333;
   color: white;
@@ -68,10 +68,10 @@ body{
   font-size: 0.7rem;
 }
 
-.header__login{
+.header__login {
   line-height: 3rem;
 }
-.header__title{
+.header__title {
   flex: 1;
   padding-left: 1rem;
   line-height: 3rem;
