@@ -42,3 +42,5 @@ public/bundle.js
 
 .vscode/
 typings/
+
+public/
