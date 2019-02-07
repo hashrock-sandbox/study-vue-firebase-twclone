@@ -12,25 +12,27 @@
       <textarea v-if="user" class="message" v-model="message"></textarea>
       <button v-if="user" class="send" @click="send(message)">送信</button>
     </div>
-    <div class="item" :key="index" v-for="(item, index) in reversed" track-by="key">
+    <div class="item" :key="item.id" v-for="(item) in reversed" track-by="key">
       <div class="item__info">
-        <div class="item__username">{{item.val().author.full_name}}</div>
-        <div class="item__date">{{item.val().timestamp | date}}</div>
+        <div class="item__username">{{item.author.full_name}}</div>
+        <div class="item__date">{{item.timestamp | date}}</div>
         <div class="item__remove" @click="remove(item)">×</div>
       </div>
-      <div class="itemtext">{{item.val().text}}</div>
+      <div class="itemtext">{{item.text}}</div>
     </div>
   </div>
 </template>
 <script lang="ts">
 import Vue from "vue";
-import firebase from 'firebase'
+import firebase from "firebase";
+
 export class FirebaseItemBody {
+  id: string;
   author: {
     uid: string;
     full_name: string;
   };
-  timestamp: Object;
+  timestamp: firebase.firestore.Timestamp;
   text: string;
 }
 interface FirebaseItemValue {
@@ -51,8 +53,11 @@ export class FirebaseUser {
 
 export default Vue.extend({
   filters: {
-    date: function(value: number) {
-      var d = new Date(value);
+    date: function(value: firebase.firestore.Timestamp) {
+      if (!value) {
+        return "";
+      }
+      const d = value.toDate();
       return `${d.getFullYear()}-${d.getMonth() +
         1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}`;
     }
@@ -64,10 +69,14 @@ export default Vue.extend({
       items: []
     };
   },
-  computed:{
+  computed: {
     reversed() {
-        return this.items
-            .reverse()
+      let sorted = this.items.slice();
+      sorted.sort((a, b) => {
+        console.log(a.timestamp.toDate() - b.timestamp.toDate());
+        return -1 * (a.timestamp.toDate() - b.timestamp.toDate());
+      });
+      return sorted;
     }
   },
   methods: {
@@ -77,24 +86,25 @@ export default Vue.extend({
     logout() {
       this.auth.signOut();
     },
-    remove(post: FirebaseItem) {
-      this.items.$remove(post);
-      this.ref.child(post.key).remove();
+    remove(post: FirebaseItemBody) {
+      this.collection.doc(post.id).delete();
+      const index = this.items.indexOf(post);
+      this.items.splice(index, 1);
     },
 
     send(message: string) {
-      var currentUser = this.auth.currentUser;
-      var item: FirebaseItemBody = {
+      const currentUser = this.auth.currentUser;
+      const item = {
         author: {
           uid: this.auth.currentUser.uid,
           full_name: this.auth.currentUser.displayName
         },
         text: message,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
       };
-      this.ref.push(item).then(() => {
+      this.collection.add(item).then(() => {
         this.message = "";
-        var t: HTMLTextAreaElement = <HTMLTextAreaElement>(
+        const t: HTMLTextAreaElement = <HTMLTextAreaElement>(
           document.querySelector(".message")
         );
         t.focus();
@@ -103,23 +113,39 @@ export default Vue.extend({
   },
   mounted() {
     // Initialize Firebase
-    var config = {
+    const config = {
       apiKey: "AIzaSyAKr_3kCBAdOSTvyMywnoHn2kAjhTgQlXE",
       authDomain: "twclone001.firebaseapp.com",
       databaseURL: "https://twclone001.firebaseio.com",
-      storageBucket: "twclone001.appspot.com"
+      projectId: "twclone001",
+      storageBucket: "twclone001.appspot.com",
+      messagingSenderId: "863911734656"
     };
     firebase.initializeApp(config);
 
     this.auth = firebase.auth();
-    this.ref = firebase.database().ref("posts");
+    this.db = firebase.firestore();
+    this.collection = this.db.collection("posts");
     this.auth.onAuthStateChanged((user: FirebaseUser) => {
       this.user = user;
     });
-    this.ref.off();
-    this.ref.limitToLast(30).on("child_added", (item: FirebaseItem) => {
-      this.items.push(item);
-    });
+    this.collection
+      .orderBy("timestamp", "desc")
+      .limit(100)
+      .onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === "added") {
+            this.items.push({
+              ...change.doc.data({ serverTimestamps: "estimate" }),
+              id: change.doc.id
+            });
+          } else if (change.type === "modified") {
+            // commit('set', payload)
+          } else if (change.type === "removed") {
+            // commit('remove', payload)
+          }
+        });
+      });
   }
 });
 </script>
